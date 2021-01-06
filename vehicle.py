@@ -1,3 +1,4 @@
+# Bicycle model implementation
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -5,37 +6,45 @@ import math
 class Vehicle():
     def __init__(self, mass = 1000, mu = 0.5, vel = 1,acc = 0,max_acc = 10 ,max_vel = 20,
                 g=9.8, loc = [0.0,0.0], dist_to_px = 20, track=None, speed_X=1):
+        # scaling 
         self.dist_to_px = dist_to_px
         self.dt = 1e-3
         self.g = 9.8
-                
+
+        # speed_X is to increase the speed of simulation at the  cost of precision.
         self.mass = mass
         self.mu = mu
         self.lr = 1
         self.lf = 1
         self.max_vel = max_vel*speed_X
         self.max_acc = max_acc*(speed_X**2)
+        # max angle 70
         self.max_steer = np.deg2rad(70)
 
         self.loc = np.array(loc)
         self.loc =  self.loc.astype(float)
         print(self.loc)
+        # slip angle -> angle b/w acceleration and vel
         self.slip_angle = 0
+        # angle b/w vel and heading line
         self.course_angle = 0
+        # heading angle
         self.yaw = 0
-        self.vel = vel*speed_X 
-        self.acc = acc*(speed_X**2)
         self.yaw_rate = 0
 
+        self.vel = vel*speed_X 
+        self.acc = acc*(speed_X**2)
+
+        # scaling factor
         self.throttle_fac = 10
         self.speed_X =speed_X
+        # number of vision points. 
         self.num_vis_pts = 8
         self.max_vis = 5*self.dist_to_px
         self.vis_pts = []
+        # importing track from track.py
         self.track = track
 
-        # self.render = 0
-        self.car = cv2.imread("images/car.png")
     def reset(self):
         self.slip_angle = 0
         self.course_angle = 0
@@ -90,16 +99,14 @@ class Vehicle():
         return (steer*np.pi/2)
     
     def move(self, throttle, steer):
-        # self.loc[0] -= 0.1
-        # print(self.loc)
-        # exit()
         vel_x = self.vel*np.sin(self.yaw + self.course_angle)
-        # vel_x = np.clip(vel_x - np.sign(vel_x)*(self.g*self.mu*(self.speed_X**2)*self.dt), 0, None)
         vel_y = self.vel*np.cos(self.yaw + self.course_angle)
-        # vel_y = np.clip(vel_y - np.sign(vel_y)*(self.g*self.mu*(self.speed_X**2)*self.dt), 0, None)
 
+        # acceleration update
         self.acc = throttle*self.throttle_fac*(self.speed_X**2)
         self.acc = np.clip(self.acc, -self.max_acc,self.max_acc)
+        
+        # velocity update
         self.vel += (self.acc - 1*(self.g*self.mu)*(self.speed_X**2))*(self.dt)
         self.vel = np.clip(self.vel, 0,self.max_vel)
         self.yaw_rate = self.vel/self.lr*np.sin(self.course_angle)
@@ -107,7 +114,6 @@ class Vehicle():
         self.yaw += self.yaw_rate*self.dt
         if abs(self.yaw)>np.pi*2:
             self.yaw -= np.pi*2
-        # print(self.yaw_rate, self.get_angle(steer))
         self.loc[1] -= vel_y*self.dt*self.dist_to_px 
         self.loc[0] += vel_x*self.dt*self.dist_to_px
 

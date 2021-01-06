@@ -76,12 +76,7 @@ class Track():
 
         temp = ((left_boundary_pts[0][0]+right_boundary_pts[0][0])//2, left_boundary_pts[0][1]-2)
         screen = np.float32(screen)
-        # print(screen)
         screen = cv2.cvtColor(screen, cv2.COLOR_GRAY2BGR)
-        # cv2.imwrite("temp.jpg",screen)
-        # screen = cv2.imread("temp.jpg")
-        # print(screen)
-        # exit()
         val = 5
         cv2.floodFill(screen, None, seedPoint=temp, newVal=(255, 255, 255), loDiff=(val, val, val, val), upDiff=(val, val, val, val))
 
@@ -89,24 +84,5 @@ class Track():
         self.spawn_loc = [np.random.randint(left_boundary_pts[0][0],right_boundary_pts[0][0]), left_boundary_pts[0][1]-5]
         return screen, self.spawn_loc
 
-# track01 = Track()
-# for i in range(5):
-#     trk01_scr, spawn_loc = track01.gen_track()
-#     done = 0
-#     outcome="DEAD"
-#     car01 = Vehicle(1000, 0.5, loc=spawn_loc, dist_to_px=track01.dist_to_px)
-#     car01.vel = 2000
-#     while done ==0:
-        
-#         start = time.time()
-#         # print(trk01_scr)
-#         input_scr = trk01_scr.copy()
-#         car01.track = input_scr
-#         # car01.vision_points(input_scr)
-#         # spawn_loc,done=car01.trial_move()4
-#         spawn_loc,done=car01.move(10, 0)
-#         if spawn_loc[1]<0:
-#             outcome = "SUCCESS"
-#             break
-#     print(outcome)
+
 
