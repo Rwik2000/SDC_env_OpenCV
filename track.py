@@ -13,7 +13,7 @@ class Track():
         self.dist_to_px = dist_to_px
         self.trk_width_px = trk_width*self.dist_to_px
 
-        self.turns = [0,1,2,3,4]
+        self.turns = [0] #random turns
 
         # Car params
         self.car_front_clearance = 5*self.dist_to_px #5 stands for meter, self.dist_to_px is conversion to pixel space
@@ -68,21 +68,21 @@ class Track():
         left_final_points = self._find_bez_traj(left_boundary_pts, 20)
         right_final_points = self._find_bez_traj(right_boundary_pts, 20)
 
-        screen = np.zeros((self.scr_height, self.scr_width))
-        screen = cv2.line(screen, tuple(left_final_points[0]), tuple(right_final_points[0]), (255,255,255))
+        self.screen = np.zeros((self.scr_height, self.scr_width))
+        self.screen = cv2.line(self.screen, tuple(left_final_points[0]), tuple(right_final_points[0]), (255,255,255))
         for i in range(len(left_final_points)-1):
-            screen = cv2.line(screen, tuple(left_final_points[i]), tuple(left_final_points[i+1]), (255,255,255))
-            screen = cv2.line(screen, tuple(right_final_points[i]), tuple(right_final_points[i+1]), (255,255,255))
+            self.screen = cv2.line(self.screen, tuple(left_final_points[i]), tuple(left_final_points[i+1]), (255,255,255))
+            self.screen = cv2.line(self.screen, tuple(right_final_points[i]), tuple(right_final_points[i+1]), (255,255,255))
 
         temp = ((left_boundary_pts[0][0]+right_boundary_pts[0][0])//2, left_boundary_pts[0][1]-2)
-        screen = np.float32(screen)
-        screen = cv2.cvtColor(screen, cv2.COLOR_GRAY2BGR)
+        self.screen = np.float32(self.screen)
+        self.screen = cv2.cvtColor(self.screen, cv2.COLOR_GRAY2BGR)
         val = 5
-        cv2.floodFill(screen, None, seedPoint=temp, newVal=(255, 255, 255), loDiff=(val, val, val, val), upDiff=(val, val, val, val))
+        cv2.floodFill(self.screen, None, seedPoint=temp, newVal=(255, 255, 255), loDiff=(val, val, val, val), upDiff=(val, val, val, val))
 
         # Random spawn location of the car
-        self.spawn_loc = [np.random.randint(left_boundary_pts[0][0],right_boundary_pts[0][0]), left_boundary_pts[0][1]-5]
-        return screen, self.spawn_loc
+        spawn_loc = [np.random.randint(left_boundary_pts[0][0],right_boundary_pts[0][0]), left_boundary_pts[0][1]-5]
+        return self.screen, spawn_loc
 
 
 
