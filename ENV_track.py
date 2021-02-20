@@ -2,8 +2,6 @@ import numpy as np
 import cv2
 import random
 from scipy.linalg import pascal
-from vehicle import Vehicle
-import time
 class Track():
     def __init__(self, dist_to_px,scr_width = 800, scr_height = 600, trk_width = 10):
         # Track params

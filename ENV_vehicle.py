@@ -1,8 +1,6 @@
 # Bicycle model implementation
 import numpy as np
-import cv2
 import matplotlib.pyplot as plt
-import math
 class Vehicle():
     def __init__(self, mass = 1000, mu = 0.5, vel = 1,acc = 0,max_acc = 10 ,max_vel = 20,
                 g=9.8, loc = [0.0,0.0], dist_to_px = 20, track=None, speed_X=1):
@@ -42,9 +40,13 @@ class Vehicle():
         self.speed_X =speed_X
         # number of vision points. 
         self.num_vis_pts = 8
+        self.anglesToSee = []
+        for i in range(self.num_vis_pts):
+            self.anglesToSee.append(np.deg2rad(i*180/(self.num_vis_pts-1)))
+
         self.max_vis = 10*self.dist_to_px
 
-        self._vis_pts = [] #units are in pixels and will coomprise of coordinates instead of distances.
+        self._vis_pts = [] #units are in pixels and will comprise of coordinates instead of distances.
         self.vis_pts = [] #units are in meters and will contain distances of the track points from the car. The order being 0 to 180 degrees
         
         # importing track from track.py
@@ -59,18 +61,17 @@ class Vehicle():
         self.yaw_rate = 0
         self.reward = 0
 
-    # def random_spawn(self):
-    #     pass
+
     def get_vision_points(self):
         h,w,_ =self.track.shape
-        angles = []
-        for i in range(self.num_vis_pts):
-            angles.append(np.deg2rad(i*180/(self.num_vis_pts-1)))
+        # angles = []
+        # for i in range(self.num_vis_pts):
+        #     angles.append(np.deg2rad(i*180/(self.num_vis_pts-1)))
         self._vis_pts = []
         self.vis_pts = []
         self.pt_1 = np.array(self.loc)
         self.pt_2 = self.pt_1
-        for angle in angles:
+        for angle in self.anglesToSee:
             count = 1
             done = 1
             dist = self.max_vis
@@ -90,30 +91,14 @@ class Vehicle():
             
             self.pt_2 = self.pt_1
 
-    # def drawCar(self,x0, y0, width, height, angle, img):
-
-    #     # _angle = angle * math.pi / 180.0
-    #     _angle = angle
-    #     b = math.cos(_angle) * 0.5
-    #     a = math.sin(_angle) * 0.5
-    #     pt0 = (int(x0 - a * height - b * width),
-    #         int(y0 + b * height - a * width))
-    #     pt1 = (int(x0 + a * height - b * width),
-    #         int(y0 - b * height - a * width))
-    #     pt2 = (int(2 * x0 - pt0[0]), int(2 * y0 - pt0[1]))
-    #     pt3 = (int(2 * x0 - pt1[0]), int(2 * y0 - pt1[1]))
-
-    #     cv2.line(img, pt0, pt1, (0, 255, 255), 2)
-    #     cv2.line(img, pt1, pt2, (0, 0, 255), 2) #Car front
-    #     cv2.line(img, pt2, pt3, (0, 255, 255), 2)
-    #     cv2.line(img, pt3, pt0, (0, 255, 255), 2)
-    #     return img
 
     def get_angle(self, steer):
         # output angle in radians
         return (steer*np.pi/2)
     
-    def move(self, throttle, steer):
+    def move(self, throttle, _steer):
+        steer = (_steer - 0.5)*2
+        # print(steer)
         self.time += self.dt*self.speed_X
         vel_x = self.vel*np.sin(self.yaw + self.course_angle)
         vel_y = self.vel*np.cos(self.yaw + self.course_angle)
@@ -132,6 +117,7 @@ class Vehicle():
         self.yaw += self.yaw_rate*self.dt
         if abs(self.yaw)>np.pi*2:
             self.yaw -= np.pi*2
+        self.prev_loc = self.loc
         self.loc[1] -= vel_y*self.dt*self.dist_to_px 
         self.loc[0] += vel_x*self.dt*self.dist_to_px
 
@@ -143,31 +129,29 @@ class Vehicle():
                 self.done = 1
             elif (self.track[int(self.loc[1])][int(self.loc[0])] == np.array([0,0,0])).all():
                 self.reset()
-                self.done = -1                
+                self.done = -1      
+                # print("yes")          
         except IndexError:
             self.done = -1
 
         self.get_reward()
-        return self.loc, self.done, self.reward
+        # print(self.reward)
+        return self.vis_pts,self.loc, self.done, self.reward
 
     def get_reward(self):
         self.reward = 0
         if self.done == 1:
             self.reward += 100
-        elif self.done == -1:
-            self.reward -= 50
         else:
-            self.reward = -self.time*10
+            if self.done == -1:
+                self.reward -= 100
+            # print("yo")
+            self.reward -= 10
+            self.reward -= (self.loc[1] - self.prev_loc[1])*1.3
+        # print(self.reward)
         return round(self.reward,2)
         
-    # def render(self):
-    #     for point in self._vis_pts:
-    #         cv2.circle(self.track,tuple(point), 2, (0,255,0),3)
-    #     cv2.putText(self.track,str(np.rad2deg(self.yaw)), (50,50), cv2.FONT_HERSHEY_COMPLEX, 2, (255,255,0), 3)
-    #     cv2.circle(self.track,(int(self.loc[0]),int(self.loc[1])), 4, (0,255,255),3)    
-    #     self.track = self.drawCar(int(self.loc[0]), int(self.loc[1]), 20, 40, self.yaw, self.track)
-    #     cv2.imshow("xyz",self.track)
-    #     cv2.waitKey(100)
+
     
 
 

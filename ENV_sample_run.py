@@ -2,12 +2,12 @@ import time
 import numpy as np
 import cv2
 import random
-from environment import env
+from ENV_environment import env
 
 ENV = env(speed_X=70)
 trk01 = ENV.gen_track()
-ENV.num_vehicles = 10
-initial_vel = 20
+ENV.num_vehicles = 2
+initial_vel = 5
 Cars = ENV.gen_vehicles()
 ENV.print_info = 1
 
@@ -16,10 +16,6 @@ for i in range(20):
     outcome="DEAD"
     for i in range(ENV.num_vehicles):
         ENV.vehicles[i].vel = initial_vel*ENV.speed_X
-    # print(ENV.vehicles[0].vel)
-    # Car01.vel = 10*ENV.speed_X
-    # Car02.vel = 10*ENV.speed_X
-    # Car03.vel = 10*ENV.speed_X
     start = time.time()
     locus = trk01_scr.copy()
     tot_reward = 0
@@ -39,7 +35,8 @@ for i in range(20):
                 steer = 0.5
                 steer_val = random.choice([-1,1])*steer
 
-                _ ,dones[i], reward = ENV.vehicles[i].move(1,steer_val)
+                vis_pts,_ ,dones[i], reward = ENV.vehicles[i].move(1,steer_val)
+                # print(vis_pts)
                 # print(ENV.vehicles[i].vis_pts)
 
         '''If render not required, comment the next line'''
